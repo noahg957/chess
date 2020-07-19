@@ -17,7 +17,7 @@ class Square
       "   ".colorize(background: "light_#{@color}".to_sym)
     else
       #will need to change to occupying_piece.display once i make the pieces.
-    " #{@occupying_piece} ".colorize(background: "light_#{@color}".to_sym)
+    " #{@occupying_piece.display} ".colorize(background: "light_#{@color}".to_sym)
     end
   end
 

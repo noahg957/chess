@@ -1,5 +1,6 @@
 require_relative 'conversion'
 require_relative 'square'
+require_relative 'piece'
 require 'pp'
 require 'pry'
 
@@ -10,6 +11,7 @@ class Board
   def initialize
     @square_hash = Hash.new
     create_board()
+    place_pieces()
   end
 
   attr_accessor :square_hash, :board
@@ -32,6 +34,20 @@ class Board
       row += 1
     end
     @board
+  end
+
+  def place_pieces_row(row)
+    @board[row].each do |square|
+      square.occupying_piece = Piece.new(square.position)
+      square.occupied = true
+    end
+  end
+
+  def place_pieces
+    place_pieces_row(0)
+    place_pieces_row(1)
+    place_pieces_row(6)
+    place_pieces_row(7)
   end
 
   def display
