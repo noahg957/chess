@@ -8,29 +8,23 @@ class Board
   include Conversion
 
   def initialize
+    @square_hash = Hash.new
     create_board()
   end
 
-  attr_accessor :a1, :a2, :a3, :a4, :board
+  attr_accessor :square_hash, :board
 
   def create_board
     @board = []
     row = 0
-    @square_array = []
     while row < 8
       column = 0
       sub_array = []
-      if row % 2 == 0
-        color = 'black'
-      else 
-        color = 'white'
-      end
+      row % 2 == 0 ? color = 'black' : color = 'white'
       while column < 8
-        var_name = "@#{number_to_letter([column, row])}"
-        self.instance_variable_set(var_name.to_sym,Square.new(column,row,color))
-        square_variable = self.instance_variable_get(var_name)
-        sub_array.push(square_variable)
-        @square_array.push(var_name)
+        var_name = [column,row]
+        @square_hash[var_name] = Square.new(column,row,color)
+        sub_array.push(@square_hash[var_name])
         color == 'black' ? color = 'white' : color = 'black'
         column += 1
       end
@@ -40,17 +34,15 @@ class Board
     @board
   end
 
-  def display_board
+  def display
     system 'clear'
     system 'cls'
-    color_board = Array.new(@board)
+    display_board = Array.new(@board)
     puts "\n\n"
-    color_board.reverse.each_with_index do |row,index| 
-      print "    "
-      print 8 - index
-      print " "
+    display_board.reverse.each_with_index do |row,index| 
+      print "    " + "#{8 - index}" + " "
       row.each { |square| print square.display }
-      puts ''
+      puts 
     end
     print "       "
     puts Alphabet.join("  ")
@@ -59,5 +51,5 @@ class Board
 end
 
 board = Board.new
-board.display_board
+board.display
 binding.pry
