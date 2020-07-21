@@ -16,9 +16,11 @@ class Board
     @white_captured_pieces = []
     create_board()
     place_pieces()
+    generate_piece_lists()
   end
 
   attr_accessor :square_hash, :board
+  attr_reader :white_pieces, :black_pieces
 
   def create_board
     @board = []
@@ -68,16 +70,17 @@ class Board
     puts Alphabet.join("  ")
   end
 
-  def move_piece(start_position,end_position)
+  def move_piece(start_position,end_position, white_pieces, black_pieces)
     
     start_square = @square_hash[start_position]
     end_square = @square_hash[end_position]
     piece = start_square.occupying_piece
-    move_list = piece.list_moves
+    move_list = piece.list_moves(white_pieces, black_pieces)
     if move_list.include?(end_square)
       if end_square.occupied
         captured_piece = end_square.occupying_piece
         captured_piece.color == 'white' ? @white_captured_pieces.push(captured_piece) : @black_captured_pieces.push(captured_piece)
+        captured_piece.color == 'white' ? @white_pieces.delete(captured_piece) : @black_pieces.delete(captured_piece)
         captured_piece.square_on = nil
         captured_piece.position = nil
       end
@@ -93,17 +96,19 @@ class Board
     clear_selected(@square_hash)
   end
 
+  def generate_piece_lists
+    pieces = []
+    @square_hash.each { |key, square| pieces.push(square.occupying_piece) unless square.occupied == false  }
+    @white_pieces = pieces.select { |piece| piece.color == 'white' }
+    @black_pieces = pieces.select { |piece| piece.color == 'white' }
+  end
 
 end
 
 board = Board.new
 board.display
-board.square_hash[[0,1]].occupying_piece.list_moves
-board.display
-board.move_piece([0,1],[0,3])
-board.square_hash[[1,6]].occupying_piece.list_moves
-board.display
-board.move_piece([1,6],[1,4])
-board.square_hash[[0,3]].occupying_piece.list_moves
+board.move_piece([5,1],[5,2], board.white_pieces, board.black_pieces)
+board.move_piece([4,6],[4,5], board.white_pieces, board.black_pieces)
+board.move_piece([4,0],[7,3], board.white_pieces, board.black_pieces)
 board.display
 binding.pry

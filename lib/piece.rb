@@ -14,11 +14,11 @@ class Piece
     @display = APPEARANCE["#{@color} #{@type}"]
   end
 
-  attr_accessor :display, :color, :square_on, :position
+  attr_accessor :display, :color, :square_on, :position, :dangerous, :type
 
 
-  def list_moves
-    possible_moves(@position,@type,@color,@square_hash)
+  def list_moves(white_pieces, black_pieces)
+    possible_moves(@position,@type,@color,@square_hash,white_pieces,black_pieces)
   end
 
 end
