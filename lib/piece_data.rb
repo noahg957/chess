@@ -26,9 +26,9 @@ module PieceData
       piece = 'knight'
     elsif position[0] == 2 || position[0] == 5
       piece = 'bishop'
-    elsif position[0] == 3
-      color == 'white' ? piece = 'king' : piece = 'queen'
     elsif position[0] == 4
+      color == 'white' ? piece = 'king' : piece = 'queen'
+    elsif position[0] == 3
       color == 'white' ? piece = 'queen' : piece = 'king'
     end
 
@@ -108,7 +108,7 @@ module PieceData
         possible_moves.push(square_two_up)
         square_two_up.selected = true
       end
-      unless square_up.nil?
+      unless square_up.nil? || square_up.occupied
         possible_moves.push(square_up)
         square_up.selected = true
       end
@@ -128,7 +128,7 @@ module PieceData
         possible_moves.push(square_two_up)
         square_two_up.selected = true
       end
-      unless square_up.nil?
+      unless square_up.nil? || square_up.occupied
         possible_moves.push(square_up)
         square_up.selected = true
       end
@@ -289,12 +289,11 @@ module PieceData
                         square_hash[[column - 1, row - 1]],
                         square_hash[[column - 1, row]],
                         square_hash[[column - 1, row + 1]]]
-    binding.pry
     possible_moves = possible_moves.select { |square| !square.nil? && (!square.occupied || (square.occupied && square.occupying_piece.color != color)) }
     possible_moves = possible_moves.select { |square| check_checker(square, color, square_hash, white_pieces, black_pieces) }
     clear_selected(square_hash)
     possible_moves.each { |square| square.selected = true }
-    binding.pry
+    possible_moves
   end
 
   def clear_selected(square_hash)

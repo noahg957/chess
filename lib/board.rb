@@ -14,12 +14,13 @@ class Board
     @square_hash = Hash.new
     @black_captured_pieces = []
     @white_captured_pieces = []
+    @game_over = false
     create_board()
     place_pieces()
     generate_piece_lists()
   end
 
-  attr_accessor :square_hash, :board
+  attr_accessor :square_hash, :board, :game_over
   attr_reader :white_pieces, :black_pieces
 
   def create_board
@@ -64,16 +65,22 @@ class Board
     display_board.reverse.each_with_index do |row,index| 
       print "    " + "#{8 - index}" + " "
       row.each { |square| print square.display }
+      if index == 0
+        print "      Pieces captured by black:   "
+        @white_captured_pieces.each { |piece| print piece.display }
+      elsif index == 7
+        print "      Pieces captured by white:   "
+        @black_captured_pieces.each { |piece| print piece.display }
+      end
       puts 
     end
     print "       "
-    puts Alphabet.join("  ")
+    puts Alphabet.join("  ") + "                         "
   end
 
-  def move_piece(start_position,end_position, white_pieces, black_pieces)
-    
-    start_square = @square_hash[start_position]
-    end_square = @square_hash[end_position]
+
+
+  def move_piece(start_square,end_square, white_pieces, black_pieces)
     piece = start_square.occupying_piece
     move_list = piece.list_moves(white_pieces, black_pieces)
     if move_list.include?(end_square)
@@ -90,25 +97,65 @@ class Board
       start_square.occupied = false
       piece.square_on = end_square
       piece.position = end_square.position
+      #undoes move
+      piece_color = piece.color
+      if king_in_check?(piece.color)
+        piece.position = start_square.position
+        piece.square_on = start_square
+        start_square.occupied = true
+        start_square.occupying_piece = piece
+        unless captured_piece.nil?
+          end_square.occupying_piece = captured_piece
+          end_square.occupied = true
+          captured_piece.position = end_square.position
+          captured_piece.square_on = end_square
+          captured_piece.color == 'white' ? @white_pieces.push(captured_piece) : @black_pieces.push(captured_piece)
+          captured_piece.color == 'white' ? @white_captured_pieces.delete(captured_piece) : @black_captured_pieces.delete(captured_piece)
+        else
+          end_square.occupied = false
+          end_square.occupying_piece = captured_piece
+        end
+        return "That move would put your king in check!"
+      end
     else
-      return "error"
+      return "Sorry, that move doesn't work."
     end
     clear_selected(@square_hash)
+    'works'
   end
+
 
   def generate_piece_lists
     pieces = []
     @square_hash.each { |key, square| pieces.push(square.occupying_piece) unless square.occupied == false  }
     @white_pieces = pieces.select { |piece| piece.color == 'white' }
-    @black_pieces = pieces.select { |piece| piece.color == 'white' }
+    @black_pieces = pieces.select { |piece| piece.color == 'black' }
   end
 
+  def king_in_check?(color)
+    if color == 'white' 
+      color_pieces = @white_pieces
+    else
+      color_pieces = @black_pieces
+    end
+    king = color_pieces.select { |piece| piece.type == 'king' }
+    king = king[0]
+    king_square = king.square_on
+    checked = !check_checker(king_square, color, @square_hash, @white_pieces, @black_pieces)
+  end
+
+  def king_no_moves?(color)
+    color == 'white' ? pieces = @white_pieces : pieces = @black_pieces
+    color == 'white' ? enemy_pieces = @black_pieces : enemy_pieces = @white_pieces
+    king = pieces.select { |piece| piece.type == 'king' }
+    possible_moves = king.list_moves(@white_pieces, @black_pieces)
+    possible_moves.empty?
+  end
+
+  def checkmate?(color)
+    if king_in_check?(color) && king_no_moves?(color)
+      true
+    end
+  end
 end
 
-board = Board.new
-board.display
-board.move_piece([5,1],[5,2], board.white_pieces, board.black_pieces)
-board.move_piece([4,6],[4,5], board.white_pieces, board.black_pieces)
-board.move_piece([4,0],[7,3], board.white_pieces, board.black_pieces)
-board.display
-binding.pry
