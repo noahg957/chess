@@ -2,6 +2,7 @@ require_relative 'conversion'
 require_relative 'square'
 require_relative 'piece'
 require_relative 'piece_data'
+require_relative 'piece_mover.rb'
 require 'pp'
 require 'pry'
 
@@ -9,6 +10,7 @@ class Board
 
   include Conversion
   include PieceData
+  include PieceMover
 
   def initialize
     @square_hash = Hash.new
@@ -21,7 +23,7 @@ class Board
   end
 
   attr_accessor :square_hash, :board, :game_over
-  attr_reader :white_pieces, :black_pieces
+  attr_reader :white_pieces, :black_pieces, :white_captured_pieces, :black_captured_pieces
 
   def create_board
     @board = []
@@ -78,53 +80,6 @@ class Board
     puts Alphabet.join("  ") + "                         "
   end
 
-
-
-  def move_piece(start_square,end_square, white_pieces, black_pieces)
-    piece = start_square.occupying_piece
-    move_list = piece.list_moves(white_pieces, black_pieces)
-    if move_list.include?(end_square)
-      if end_square.occupied
-        captured_piece = end_square.occupying_piece
-        captured_piece.color == 'white' ? @white_captured_pieces.push(captured_piece) : @black_captured_pieces.push(captured_piece)
-        captured_piece.color == 'white' ? @white_pieces.delete(captured_piece) : @black_pieces.delete(captured_piece)
-        captured_piece.square_on = nil
-        captured_piece.position = nil
-      end
-      end_square.occupying_piece = piece
-      end_square.occupied = true
-      start_square.occupying_piece = nil
-      start_square.occupied = false
-      piece.square_on = end_square
-      piece.position = end_square.position
-      #undoes move
-      piece_color = piece.color
-      if king_in_check?(piece.color)
-        piece.position = start_square.position
-        piece.square_on = start_square
-        start_square.occupied = true
-        start_square.occupying_piece = piece
-        unless captured_piece.nil?
-          end_square.occupying_piece = captured_piece
-          end_square.occupied = true
-          captured_piece.position = end_square.position
-          captured_piece.square_on = end_square
-          captured_piece.color == 'white' ? @white_pieces.push(captured_piece) : @black_pieces.push(captured_piece)
-          captured_piece.color == 'white' ? @white_captured_pieces.delete(captured_piece) : @black_captured_pieces.delete(captured_piece)
-        else
-          end_square.occupied = false
-          end_square.occupying_piece = captured_piece
-        end
-        return "That move would put your king in check!"
-      end
-    else
-      return "Sorry, that move doesn't work."
-    end
-    clear_selected(@square_hash)
-    'works'
-  end
-
-
   def generate_piece_lists
     pieces = []
     @square_hash.each { |key, square| pieces.push(square.occupying_piece) unless square.occupied == false  }
@@ -132,29 +87,38 @@ class Board
     @black_pieces = pieces.select { |piece| piece.color == 'black' }
   end
 
-  def king_in_check?(color)
-    if color == 'white' 
-      color_pieces = @white_pieces
-    else
-      color_pieces = @black_pieces
-    end
-    king = color_pieces.select { |piece| piece.type == 'king' }
-    king = king[0]
-    king_square = king.square_on
-    checked = !check_checker(king_square, color, @square_hash, @white_pieces, @black_pieces)
-  end
-
   def king_no_moves?(color)
     color == 'white' ? pieces = @white_pieces : pieces = @black_pieces
     color == 'white' ? enemy_pieces = @black_pieces : enemy_pieces = @white_pieces
     king = pieces.select { |piece| piece.type == 'king' }
-    possible_moves = king.list_moves(@white_pieces, @black_pieces)
+    king = king[0]
+    possible_moves = king.list_moves(@white_pieces, @black_pieces, @white_captured_pieces, @black_captured_pieces)
+    
     possible_moves.empty?
   end
 
+  def no_moves_at_all?(color)
+    color == 'white' ? pieces = @white_pieces : pieces = @black_pieces
+    color == 'white' ? enemy_pieces = @black_pieces : enemy_pieces = @white_pieces
+    checked = false
+    pieces.each do |piece|
+      possible_moves = piece.list_moves(@white_pieces,@black_pieces, @white_captured_pieces, @black_captured_pieces)
+      start_square = piece.square_on
+      possible_moves.each do |end_square|
+        if test_move_piece(start_square,end_square, @white_pieces, @black_pieces, @white_captured_pieces, @black_captured_pieces, @square_hash)
+          checked = true
+        end
+      end
+    end
+  end
+
+
   def checkmate?(color)
-    if king_in_check?(color) && king_no_moves?(color)
+    if king_in_check?(color, @white_pieces, @black_pieces, @white_captured_pieces, @black_captured_pieces, @square_hash) && king_no_moves?(color) && no_moves_at_all?(color)
+      @game_over = true
       true
+    else
+      false
     end
   end
 end

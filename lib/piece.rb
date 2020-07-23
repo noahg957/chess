@@ -17,8 +17,12 @@ class Piece
   attr_accessor :display, :color, :square_on, :position, :dangerous, :type
 
 
-  def list_moves(white_pieces, black_pieces)
-    possible_moves(@position,@type,@color,@square_hash,white_pieces,black_pieces)
+  def list_moves(white_pieces, black_pieces, white_captured_pieces, black_captured_pieces)
+    possible_moves(@position,@type,@color,@square_hash,white_pieces,black_pieces, white_captured_pieces, black_captured_pieces)
+  end
+
+  def list_dummy_moves(white_pieces, black_pieces, white_captured_pieces, black_captured_pieces)
+    dummy_possible_moves(@position,@type,@color,@square_hash,white_pieces,black_pieces, white_captured_pieces, black_captured_pieces)
   end
 
 end

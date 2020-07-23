@@ -48,7 +48,7 @@ class Game
     puts "#{player.name}, what piece would you like to move?"
     start_square = @board.square_hash[letter_to_number(gets.chomp)]
     if square_checker(start_square, player) == true
-      move_list = start_square.occupying_piece.list_moves(@board.white_pieces, @board.black_pieces)
+      move_list = start_square.occupying_piece.list_moves(@board.white_pieces, @board.black_pieces, @board.white_captured_pieces, @board.black_captured_pieces)
       @board.display
       if move_list.empty?
         phrase = "There are no possible moves for this piece."
@@ -64,7 +64,7 @@ class Game
         @board.game_over = true
       else
         end_square = @board.square_hash[letter_to_number(input)]
-        return_value = @board.move_piece(start_square, end_square, @board.white_pieces, @board.black_pieces)
+        return_value = @board.move_piece(start_square, end_square, @board.white_pieces, @board.black_pieces, @board.white_captured_pieces, @board.black_captured_pieces, @board.square_hash)
         if return_value != 'works'
           @error = return_value
           get_and_move(player)
@@ -80,6 +80,13 @@ class Game
     player = @white
     while @board.game_over == false
       get_and_move(player)
+      player == @white ? opp_color = @black : opp_color = @white
+      if @board.checkmate?(opp_color.color)
+        puts "Checkmate! #{player.name} wins."
+        break
+      elsif @board.king_in_check?(opp_color.color, @board.white_pieces, @board.black_pieces, @board.white_captured_pieces, @board.black_captured_pieces, @board.square_hash)
+        @error = "Check!"
+      end
       player == @white ? player = @black : player = @white
     end
   end
