@@ -121,5 +121,55 @@ class Board
       false
     end
   end
+
+  def insufficient_material?
+    white_piece_types = @white_pieces.map { |piece| piece.type }
+    black_piece_types = @black_pieces.map { |piece| piece.type }
+    if (white_piece_types.length == 1 && white_piece_types.include?('king')) && (black_piece_types.length == 1 && black_piece_types.include?('king'))
+      return true
+    end
+    4.times do |i|
+      case i
+      when 0
+        pieces = white_piece_types
+        other_pieces = black_piece_types
+        type = 'knight'
+      when 1
+        pieces = black_piece_types
+        other_pieces = white_piece_types
+        type = 'knight'
+      when 2
+        pieces = white_piece_types
+        other_pieces = black_piece_types
+        type = 'bishop'
+      when 3
+        pieces = black_piece_types
+        other_pieces = white_piece_types
+        type = 'bishop'
+      end
+      if (pieces.length == 2 && pieces.include(type)) && (other_pieces.length == 1)
+        return true
+      end
+    end
+    false
+  end
+
+  def stalemate?(color)
+    if king_no_moves?(color) && !no_moves_at_all?(color) && !checkmate?(color)
+      return true
+    end
+  end
+
+  def draw?(color)
+    if insufficient_material?() || stalemate?(color)
+      binding.pry
+      @game_over = true
+      true
+    else
+      false
+    end
+  end
+
+
 end
 

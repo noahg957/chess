@@ -84,6 +84,9 @@ class Game
       if @board.checkmate?(opp_color.color)
         puts "Checkmate! #{player.name} wins."
         break
+      elsif @board.draw?(opp_color.color)
+        puts "Draw. #{opp_color.name} has no moves."
+        break
       elsif @board.king_in_check?(opp_color.color, @board.white_pieces, @board.black_pieces, @board.white_captured_pieces, @board.black_captured_pieces, @board.square_hash)
         @error = "Check!"
       end
